@@ -53,17 +53,26 @@ int memory_free(void* valid_ptr) {
 	*(int*)((char*)header) = abs(*(int*)((char*)header));
 	*(int*)((char*)footer) = abs(*(int*)((char*)footer));
 
-	if (*(int*)((char*)footer+offset1) > 0)
+	if (*(int*)((char*)footer+offset1) > 0)					// Zlucovanie zlava doprava
 	{
+		printf("Zlucujem zlava doprava\n");
 		int new = *(int*)((char*)footer) + *(int*)((char*)footer + offset1) + 2 * offset1;
-//		printf("%d je nova velkost\n", new);
+		printf("%d je nova velkost\n", new);
 		*(int*)((char*)header) = new;
 		footer = ((char*)valid_ptr + abs(*(unsigned int*)((char*)header)));
 		*(int*)((char*)footer) = new;
 
-		//printf("Blok doprava ma hlavicku %d \n", *(int*)((char*)footer + offset1));
 	}
 
+	if (*(int*)((char*)header - offset1) > 0 && *(int*)((char*)header - offset1) != arraysize)				// Zlucovanie sprava dolava
+	{
+		printf("Zlucujem sprava dolava\n");
+		int new = *(int*)((char*)header) + *(int*)((char*)header - offset1) + 2 * offset1;
+		printf("%d je nova velkost\n", new);
+		*(int*)((char*)footer) = new;
+		header = ((char*)valid_ptr - *(int*)((char*)header - offset1) - 3 * offset1);
+		*(int*)((char*)header) = new;
+	}
 //	printf("Header %d a footer %d\n", *header, *footer);
 
 	//int check = offset0 + offset1;
@@ -159,7 +168,7 @@ int main() {
 	printf("smernik %p\n", start);
 	printf("pole %p\n", region);
 
-//	vypis(start, MAX);
+	vypis(start);
 
 	int a = 8;
 	char* pole0 = memory_alloc(a);
@@ -201,13 +210,13 @@ int main() {
 	}
 	vypis(start);
 
-	if (memory_free(pole1))
-		printf("----------------------------Neuvolnil som pole1.\n");
 	if (memory_free(pole0))
+		printf("----------------------------Neuvolnil som pole1.\n");
+	if (memory_free(pole1))
 		printf("----------------------------Neuvolnil som pole0.\n");
 	vypis(start);
 
-	int d = 10;
+	int d = 9;
 	char* pole3 = memory_alloc(d);
 	if (pole3 != NULL)
 	{
@@ -218,6 +227,8 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
+
+	vypis(start);
 
 	int e = 9;
 	char* pole4 = memory_alloc(e);
