@@ -11,16 +11,12 @@ void* memory_alloc(unsigned int size) {
 	char* pomocny;
 	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int), arraysize = *(unsigned int*)(start + 1), checksize = offset0 + offset1;
 
-//	printf("%d\n", *(unsigned int*)((char*)start + chcecksize));
-
 	while (checksize + size < arraysize)
 	{
-//		printf("checksize %d\n", checksize);
 		int header = *(unsigned int*)((char*)start + checksize);						// Hodnota aktualnej hlavicky
 
 		if (header > 0 && header >= size)
 		{
-//			printf("Som v podmienke\n");
 			int b = 1;
 			if (header - size < 8+2*offset1)											// Minimalna velkost bloku je 8, preto ak by bol zostatok po bloku mensi ako 8, bok sa alokuje vacsi
 			{
@@ -35,7 +31,6 @@ void* memory_alloc(unsigned int size) {
 				*(unsigned int*)((char*)start + checksize + size + 2 * offset1) = header - size - 2 * offset1;								// Nasledujuca hlavicka
 				*(unsigned int*)((char*)start + checksize + size + 2 * offset1 + header - size - offset1) = header - size - 2 * offset1;	// Nasledujuca paticka
 			}
-//			printf("------------------------------\n");
 			return (char*)start + checksize + offset1;
 		}
 		checksize += abs(header)+2*offset1;
@@ -45,6 +40,7 @@ void* memory_alloc(unsigned int size) {
 
 int memory_free(void* valid_ptr) {
 	// vraciam 0 ak som sa podaril, ak som nepodareny, vraciam 1
+
 	printf("---------------Zacina free---------------\n");
 	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int), arraysize = *(unsigned int*)((char*)start + offset0);
 	char* header = ((char*)valid_ptr - offset1);
@@ -53,7 +49,14 @@ int memory_free(void* valid_ptr) {
 	*(int*)((char*)header) = abs(*(int*)((char*)header));
 	*(int*)((char*)footer) = abs(*(int*)((char*)footer));
 
-	if (*(int*)((char*)footer+offset1) > 0)					// Zlucovanie zlava doprava
+	//if ((int*)((char*)footer) == (int*)((char*)start + arraysize - offset1))
+	//{
+	//	printf("555555555555555555555555555555555555555555555555555Teraz sa rovna\n");
+	//}
+
+	if (*(int*)((char*)footer+offset1) > 0 && (int*)((char*)footer) != (int*)((char*)start + arraysize - offset1))					
+		// Zlucovanie zlava doprava; vpravo je urcite iba jeden volny blok
+		// Kontrolujem hranicu pola tak, ze porovnam, ci nie je footer patickou posledneho bloku vobec
 	{
 		printf("Zlucujem zlava doprava\n");
 		int new = *(int*)((char*)footer) + *(int*)((char*)footer + offset1) + 2 * offset1;
@@ -64,7 +67,9 @@ int memory_free(void* valid_ptr) {
 
 	}
 
-	if (*(int*)((char*)header - offset1) > 0 && *(int*)((char*)header - offset1) != arraysize)				// Zlucovanie sprava dolava
+	if (*(int*)((char*)header - offset1) > 0 && *(int*)((char*)header - offset1) != arraysize)				
+		// Zlucovanie sprava dolava; vlavo je urcite iba jeden volny blok
+		// Kontrolujem hranice pola tak, ze overim, ci hodnota zapisana pred hlavickou nie je absolutna velkost pola
 	{
 		printf("Zlucujem sprava dolava\n");
 		int new = *(int*)((char*)header) + *(int*)((char*)header - offset1) + 2 * offset1;
@@ -73,25 +78,6 @@ int memory_free(void* valid_ptr) {
 		header = ((char*)valid_ptr - *(int*)((char*)header - offset1) - 3 * offset1);
 		*(int*)((char*)header) = new;
 	}
-//	printf("Header %d a footer %d\n", *header, *footer);
-
-	//int check = offset0 + offset1;
-	//while (check + abs(*(unsigned int*)((char*)start + check)) + offset1 < arraysize) {
-	//	if ((unsigned int*)((char*)start + check) == (unsigned int*)((char*)header))
-	//		break;
-
-	//	check += abs(*(unsigned int*)((char*)start + check)) + 2*offset1;
-
-	//	if (check >= arraysize - 2 * offset1) {
-	//		printf("Teraz som zlyhal vo free(). :( \n");
-	//		return 1;
-	//	}	
-	//}
-
-
-
-
-
 	return 0;
 }
 
@@ -109,14 +95,6 @@ void vypis(void* ptr) {
 	unsigned int arraysize = *(unsigned int*)((char*)start + sizeof(char));
 	printf("Celkova velkost je %u\n", arraysize);
 
-	//printf("Hlavicka prveho bloku je %d\n", *(unsigned int*)((char*)start + sizeof(char) + sizeof(unsigned int)));
-	//printf("Paticka prveho bloku je %d\n", *(unsigned int*)((char*)start + sizeof(char) + 2*sizeof(unsigned int) + prvy));
-	//printf("Hlavicka druheho bloku je %d\n", *(unsigned int*)((char*)start + sizeof(char) + 3*sizeof(unsigned int) + prvy));
-	//printf("Paticka druheho bloku je %d\n", *(unsigned int*)((char*)start + sizeof(char) + 4 * sizeof(unsigned int) + prvy + druhy));
-	//printf("Hlavicka posledneho bloku je %d\n", *(unsigned int*)((char*)start + sizeof(char) + 5 * sizeof(unsigned int) + prvy + druhy));
-	//printf("Paticka posledneho bloku je %d\n", *(unsigned int*)((char*)start + size - sizeof(unsigned int)));
-
-
 	int check = offset0 + offset1, i = 1;
 	while (check + abs(*(unsigned int*)((char*)start + check)) + offset1 < arraysize) {
 		printf("Hlavicka %d. bloku je %d\n",i, *(unsigned int*)((char*)start + check));
@@ -131,8 +109,6 @@ void vypis(void* ptr) {
 	printf("Odpad je %d\n", arraysize - check);
 }
 
-
-
 void memory_init(void* ptr, unsigned int size) {
 	start = (char*)ptr;
 	for (int i = 0; i < size; i++)
@@ -140,11 +116,10 @@ void memory_init(void* ptr, unsigned int size) {
 		start[i] = 0;
 	}
 
-
-	for (int i = size; i < 2 * size; i++)			// Pomocna alokacia pre prehladnejsi vypis; sposobuje chybu stacku
-	{
-		start[i] = 255;								// 255 je ff v 16-sustave - je to dobre vidiet
-	}
+	//for (int i = size; i < 2 * size; i++)			// Pomocna alokacia pre prehladnejsi vypis; sposobuje chybu stacku
+	//{
+	//	start[i] = 255;								// 255 je ff v 16-sustave - je to dobre vidiet
+	//}
 
 	*(char*)start = 0;
 //	printf("Flag je %d\n", *(char*)start);
@@ -210,12 +185,6 @@ int main() {
 	}
 	vypis(start);
 
-	if (memory_free(pole0))
-		printf("----------------------------Neuvolnil som pole1.\n");
-	if (memory_free(pole1))
-		printf("----------------------------Neuvolnil som pole0.\n");
-	vypis(start);
-
 	int d = 9;
 	char* pole3 = memory_alloc(d);
 	if (pole3 != NULL)
@@ -227,10 +196,20 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
+	vypis(start);
+
+	if (memory_free(pole0))
+		printf("----------------------------Neuvolnil som pole0.\n");
+	vypis(start);
+	if (memory_free(pole2))
+		printf("----------------------------Neuvolnil som pole2.\n");
+	vypis(start);
+	if (memory_free(pole1))
+		printf("----------------------------Neuvolnil som pole1.\n");
 
 	vypis(start);
 
-	int e = 9;
+	int e = 15;
 	char* pole4 = memory_alloc(e);
 	if (pole4 != NULL)
 	{
@@ -241,8 +220,12 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
-
 	vypis(start);
-
+	if (memory_free(pole3))
+		printf("----------------------------Neuvolnil som pole1.\n");
+	vypis(start);
+	if (memory_free(pole4))
+		printf("----------------------------Neuvolnil som pole1.\n");
+	vypis(start);
 	return 0;
 }
