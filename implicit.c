@@ -101,6 +101,21 @@ int memory_check(void* ptr) {
 	// nikdy nie pointer do stredu prazdna, lebo by som nevedel zistit, ci som v poli
 
 	//posunies sa o jedna dolava a skontrolujes a posunies sa k paticke a skontrolujes aj ju
+
+	/* 
+	Funkcia memory_check slúži na skontrolovanie, èi parameter(ukazovate¾) je platný ukazovate¾, 
+	ktorý bol v nejakom z predchádzajúcich volaní vrátený funkciou memory_alloc a zatia¾ nebol 
+	uvo¾nený funkciou memory_free.Funkcia vráti 0, ak je ukazovate¾ neplatný, inak vráti 1.
+	*/
+	unsigned int offset1 = sizeof(unsigned int);
+	int header = *(unsigned int*)((char*)ptr - offset1);
+	int footer = *(unsigned int*)((char*)ptr + abs(header));
+
+	printf("Header %d footer %d\n", header, footer);
+	if (header == footer && header < 0)
+		return 1;
+	
+	return 0;
 }
 
 void vypis(void* ptr) {
@@ -166,6 +181,11 @@ int main() {
 	{
 		for (int i = 0; i < a; i++)
 			pole0[i] = 1;
+
+		if (memory_check(pole0))
+			printf("Som platny\n");
+		else
+			printf("Nie som platny\n");
 	}
 	else
 	{
@@ -215,6 +235,12 @@ int main() {
 
 	if (memory_free(pole0))
 		printf("----------------------------Neuvolnil som pole0.\n");
+
+	if (memory_check(pole0))
+		printf("Som platny\n");
+	else
+		printf("Nie som platny\n");
+
 	vypis(start);
 	if (memory_free(pole2))
 		printf("----------------------------Neuvolnil som pole2.\n");
