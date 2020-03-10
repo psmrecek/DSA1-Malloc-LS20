@@ -17,11 +17,7 @@ void* memory_alloc(unsigned int size) {
 	{
 //		printf("checksize %d\n", checksize);
 		int header = *(unsigned int*)((char*)start + checksize);						// Hodnota aktualnej hlavicky
-		//if (header - offset1 < size)
-		//{
-		//	return NULL;
-		//}
-//		printf("header %d\n", header);
+
 		if (header > 0 && header >= size)
 		{
 //			printf("Som v podmienke\n");
