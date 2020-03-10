@@ -21,14 +21,16 @@ void* memory_alloc(unsigned int size) {
 		if (header > 0 && header >= size)
 		{
 //			printf("Som v podmienke\n");
-			if (header - size < 8)
+			int b = 1;
+			if (header - size < 8)														// Minimalna velkost bloku je 8, preto ak by bol zostatok po bloku mensi ako 8, bok sa alokuje vacsi
 			{
 				size = header;
+				b = 0;
 			}
 			*(unsigned int*)((char*)start + checksize) = -1*size;						// Hlavicka bloku zmenena
 			*(unsigned int*)((char*)start + checksize + size + offset1) = -1 *size;		// Paticka bloku zmenena
 
-			if (arraysize - checksize - 2*offset1 - size >= 2*offset1)					// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
+			if (b && arraysize - checksize - 2*offset1 - size >= 2*offset1)					// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
 			{
 				*(unsigned int*)((char*)start + checksize + size + 2 * offset1) = header - size - 2 * offset1;								// Nasledujuca hlavicka
 				*(unsigned int*)((char*)start + checksize + size + 2 * offset1 + header - size - offset1) = header - size - 2 * offset1;	// Nasledujuca paticka
@@ -186,7 +188,7 @@ int main() {
 		printf("----------------------------Neuvolnil som pole0.\n");
 	vypis(start, MAX);
 
-	int d = 25;
+	int d = 18;
 	char* pole3 = memory_alloc(d);
 	if (pole3 != NULL)
 	{
