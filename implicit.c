@@ -11,30 +11,45 @@ void* memory_alloc(unsigned int size) {
 	char* pomocny;
 	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int), arraysize = *(unsigned int*)(start + 1), checksize = offset0 + offset1;
 
+	int bestheader = *(unsigned int*)((char*)start + checksize);
+	int diff = arraysize, enough = 0, bestchecksize = checksize;
+
 	while (checksize + size < arraysize)
 	{
 		int header = *(unsigned int*)((char*)start + checksize);						// Hodnota aktualnej hlavicky
-
+		
 		if (header > 0 && header >= size)
 		{
-			int b = 1;
-			if (header - size < 8+2*offset1)											// Minimalna velkost bloku je 8, preto ak by bol zostatok po bloku mensi ako 8, bok sa alokuje vacsi
+			enough = 1;																	// Bolean oznacujuci existenciu aspon jedneho vyhovujuceho bloku
+			if (header - size < diff)													// Ak je rozdiel headera a velkosti mensi ako predosly rozdiel
 			{
-				size = header;
-				b = 0;
+				bestheader = header;													// Priebezne najlepsia hodnota hlavicky
+				diff = header - size;													// Priebezne najlepsi rozdiel
+				bestchecksize = checksize;												// Priebezne najlepsi offset voci zaciatku pola
 			}
-			*(unsigned int*)((char*)start + checksize) = -1*size;						// Hlavicka bloku zmenena
-			*(unsigned int*)((char*)start + checksize + size + offset1) = -1 *size;		// Paticka bloku zmenena
-
-			if (b && arraysize - checksize - 2*offset1 - size >= 2*offset1)					// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
-			{
-				*(unsigned int*)((char*)start + checksize + size + 2 * offset1) = header - size - 2 * offset1;								// Nasledujuca hlavicka
-				*(unsigned int*)((char*)start + checksize + size + 2 * offset1 + header - size - offset1) = header - size - 2 * offset1;	// Nasledujuca paticka
-			}
-			return (char*)start + checksize + offset1;
 		}
-		checksize += abs(header)+2*offset1;
+		checksize += abs(header)+2*offset1;												// Posun na dalsiu hlavicku
 	}
+
+	if (enough)
+	{
+		int b = 1;
+		if (bestheader - size < 8 + 2 * offset1)											// Minimalna velkost bloku je 8, preto ak by bol zostatok po bloku mensi ako 8, bok sa alokuje vacsi
+		{
+			size = bestheader;
+			b = 0;
+		}
+		*(unsigned int*)((char*)start + bestchecksize) = -1 * size;						// Hlavicka bloku zmenena
+		*(unsigned int*)((char*)start + bestchecksize + size + offset1) = -1 * size;		// Paticka bloku zmenena
+
+		if (b && arraysize - bestchecksize - 2 * offset1 - size >= 2 * offset1)					// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
+		{
+			*(unsigned int*)((char*)start + bestchecksize + size + 2 * offset1) = bestheader - size - 2 * offset1;								// Nasledujuca hlavicka
+			*(unsigned int*)((char*)start + bestchecksize + size + 2 * offset1 + bestheader - size - offset1) = bestheader - size - 2 * offset1;	// Nasledujuca paticka
+		}
+		return (char*)start + bestchecksize + offset1;
+	}
+
 	return NULL;
 }
 
@@ -145,7 +160,7 @@ int main() {
 
 	vypis(start);
 
-	int a = 8;
+	int a = 9;
 	char* pole0 = memory_alloc(a);
 	if (pole0 != NULL)
 	{
@@ -209,7 +224,7 @@ int main() {
 
 	vypis(start);
 
-	int e = 15;
+	int e = 47;
 	char* pole4 = memory_alloc(e);
 	if (pole4 != NULL)
 	{
@@ -220,12 +235,13 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
+
 	vypis(start);
 	if (memory_free(pole3))
 		printf("----------------------------Neuvolnil som pole1.\n");
 	vypis(start);
-	if (memory_free(pole4))
-		printf("----------------------------Neuvolnil som pole1.\n");
+	//if (memory_free(pole4))
+	//	printf("----------------------------Neuvolnil som pole1.\n");
 	vypis(start);
 	return 0;
 }
