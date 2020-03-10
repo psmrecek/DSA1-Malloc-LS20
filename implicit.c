@@ -89,7 +89,7 @@ int memory_check(void* ptr) {
 }
 
 void vypis(void* ptr) {
-	printf("++++++++++++++++++++++++++++++\n");
+	printf("+++++++++++++++Zaciatok funkcie vypis+++++++++++++++\n");
 	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int);
 	printf("Flag je %d\n", *(char*)start);
 	unsigned int arraysize = *(unsigned int*)((char*)start + sizeof(char));
