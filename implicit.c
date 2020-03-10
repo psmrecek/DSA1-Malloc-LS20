@@ -22,7 +22,7 @@ void* memory_alloc(unsigned int size) {
 		{
 //			printf("Som v podmienke\n");
 			int b = 1;
-			if (header - size < 8)														// Minimalna velkost bloku je 8, preto ak by bol zostatok po bloku mensi ako 8, bok sa alokuje vacsi
+			if (header - size < 8+2*offset1)											// Minimalna velkost bloku je 8, preto ak by bol zostatok po bloku mensi ako 8, bok sa alokuje vacsi
 			{
 				size = header;
 				b = 0;
@@ -93,7 +93,7 @@ int memory_check(void* ptr) {
 	//posunies sa o jedna dolava a skontrolujes a posunies sa k paticke a skontrolujes aj ju
 }
 
-void vypis(void* ptr, unsigned int size) {
+void vypis(void* ptr) {
 	printf("++++++++++++++++++++++++++++++\n");
 	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int);
 	printf("Flag je %d\n", *(char*)start);
@@ -163,32 +163,51 @@ int main() {
 
 	int a = 8;
 	char* pole0 = memory_alloc(a);
-	for (int i = 0; i < a; i++)
-		pole0[i] = 1;
+	if (pole0 != NULL)
+	{
+		for (int i = 0; i < a; i++)
+			pole0[i] = 1;
+	}
+	else
+	{
+		printf("---------------------------Som NULL\n");
+	}
 
-//	vypis(start, MAX);
+	vypis(start);
 
 	int b = 10;
 	char* pole1 = memory_alloc(b);
-	for (int i = 0; i < b; i++)
-		pole1[i] = 2;
-
-	vypis(start, MAX);
+	if (pole1 != NULL)
+	{
+		for (int i = 0; i < b; i++)
+			pole1[i] = 2;
+	}
+	else
+	{
+		printf("---------------------------Som NULL\n");
+	}
+	vypis(start);
 
 	int c = 11;
 	char* pole2 = memory_alloc(c);
-	for (int i = 0; i < c; i++)
-		pole2[i] = 3;
-
-	vypis(start, MAX);
+	if (pole0 != NULL)
+	{
+		for (int i = 0; i < c; i++)
+			pole2[i] = 3;
+	}
+	else
+	{
+		printf("---------------------------Som NULL\n");
+	}
+	vypis(start);
 
 	if (memory_free(pole1))
 		printf("----------------------------Neuvolnil som pole1.\n");
 	if (memory_free(pole0))
 		printf("----------------------------Neuvolnil som pole0.\n");
-	vypis(start, MAX);
+	vypis(start);
 
-	int d = 18;
+	int d = 10;
 	char* pole3 = memory_alloc(d);
 	if (pole3 != NULL)
 	{
@@ -200,7 +219,19 @@ int main() {
 		printf("---------------------------Som NULL\n");
 	}
 
-	vypis(start, MAX);
+	int e = 9;
+	char* pole4 = memory_alloc(e);
+	if (pole4 != NULL)
+	{
+		for (int i = 0; i < e; i++)
+			pole4[i] = 5;
+	}
+	else
+	{
+		printf("---------------------------Som NULL\n");
+	}
+
+	vypis(start);
 
 	return 0;
 }
