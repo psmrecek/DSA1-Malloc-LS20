@@ -61,8 +61,11 @@ int memory_free(void* valid_ptr) {
 	char* header = ((char*)valid_ptr - offset1);
 	char* footer = ((char*)valid_ptr + abs(*(unsigned int*)((char*)header)));
 
+	int boolean = 1;									// Kedy moze free zlyhat?
+
 	*(int*)((char*)header) = abs(*(int*)((char*)header));
 	*(int*)((char*)footer) = abs(*(int*)((char*)footer));
+	boolean = 0;
 
 	//if ((int*)((char*)footer) == (int*)((char*)start + arraysize - offset1))
 	//{
@@ -79,7 +82,6 @@ int memory_free(void* valid_ptr) {
 		*(int*)((char*)header) = new;
 		footer = ((char*)valid_ptr + abs(*(unsigned int*)((char*)header)));
 		*(int*)((char*)footer) = new;
-
 	}
 
 	if (*(int*)((char*)header - offset1) > 0 && *(int*)((char*)header - offset1) != arraysize)				
@@ -93,7 +95,7 @@ int memory_free(void* valid_ptr) {
 		header = ((char*)valid_ptr - *(int*)((char*)header - offset1) - 3 * offset1);
 		*(int*)((char*)header) = new;
 	}
-	return 0;
+	return boolean;
 }
 
 int memory_check(void* ptr) {
@@ -145,6 +147,7 @@ void memory_init(void* ptr, unsigned int size) {
 	{
 		start[i] = 0;
 	}
+
 
 	//for (int i = size; i < 2 * size; i++)			// Pomocna alokacia pre prehladnejsi vypis; sposobuje chybu stacku
 	//{
@@ -233,8 +236,8 @@ int main() {
 	}
 	vypis(start);
 
-	if (memory_free(pole0))
-		printf("----------------------------Neuvolnil som pole0.\n");
+	//if (memory_free(pole0))
+	//	printf("----------------------------Neuvolnil som pole0.\n");
 
 	if (memory_check(pole0))
 		printf("Som platny\n");
@@ -242,15 +245,15 @@ int main() {
 		printf("Nie som platny\n");
 
 	vypis(start);
-	if (memory_free(pole2))
-		printf("----------------------------Neuvolnil som pole2.\n");
-	vypis(start);
-	if (memory_free(pole1))
-		printf("----------------------------Neuvolnil som pole1.\n");
+	//if (memory_free(pole2))
+	//	printf("----------------------------Neuvolnil som pole2.\n");
+	//vypis(start);
+	//if (memory_free(pole1))
+	//	printf("----------------------------Neuvolnil som pole1.\n");
 
 	vypis(start);
 
-	int e = 47;
+	int e = 25;
 	char* pole4 = memory_alloc(e);
 	if (pole4 != NULL)
 	{
@@ -263,11 +266,23 @@ int main() {
 	}
 
 	vypis(start);
-	if (memory_free(pole3))
-		printf("----------------------------Neuvolnil som pole1.\n");
-	vypis(start);
+	//if (memory_free(pole3))
+	//	printf("----------------------------Neuvolnil som pole1.\n");
+	//vypis(start);
 	//if (memory_free(pole4))
 	//	printf("----------------------------Neuvolnil som pole1.\n");
+
+	if (memory_free(pole0))
+		printf("----------------------------Neuvolnil som pole0.\n");
+	if (memory_free(pole4))
+		printf("----------------------------Neuvolnil som pole4.\n");
+	if (memory_free(pole1))
+		printf("----------------------------Neuvolnil som pole1.\n");
+	if (memory_free(pole3))
+		printf("----------------------------Neuvolnil som pole3.\n");
+	if (memory_free(pole2))
+		printf("----------------------------Neuvolnil som pole2.\n");
+
 	vypis(start);
 	return 0;
 }
