@@ -28,6 +28,7 @@ void* memory_alloc(unsigned int size) {
 																							// enough je boolean, ktory oznacuje, ci sa nachadza v poli aspon jeden blok dostatocnej velkosti na alokovanie
 																							// bestchecksize je hodnota najlepsieho najdeneho posunu od zaciatku pola
 	while (checksize < arraysize)
+//	while (checksize + size < arraysize)
 	{
 		int header = *(unsigned int*)((char*)start + checksize);							// Hodnota aktualnej hlavicky
 		
@@ -68,61 +69,25 @@ void* memory_alloc(unsigned int size) {
 	return NULL;
 }
 
-int memory_free(void* valid_ptr) {															// vracia 0 ak sa podarilo uvolnit pamat, inak vracia 1
-
-	if (valid_ptr == NULL || memory_check(valid_ptr) == 0)									// Kontrola platnosti pointera										
-		return 1;
-
-	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int), arraysize = *(unsigned int*)((char*)start + offset0);
-	char* header = ((char*)valid_ptr - offset1);											// Nastavenie sa na hlavicku daneho bloku
-	char* footer = ((char*)valid_ptr + abs(*(unsigned int*)((char*)header)));				// Nastavenie sa na paticku daneho bloku
-
-	*(int*)((char*)header) = abs(*(int*)((char*)header));									// Oznacim hlavicku aj paticku kladnym cislom, co znamena, ze su volne
-	*(int*)((char*)footer) = abs(*(int*)((char*)footer));
-
-
-	if (*(int*)((char*)footer+offset1) > 0 && (int*)((char*)footer) != (int*)((char*)start + arraysize - offset1))					
-		// Zlucovanie zlava doprava; vpravo je urcite iba jeden volny blok
-		// Kontrolujem hranicu pola tak, ze porovnam, ci nie je footer patickou posledneho bloku vobec
-	{
-		int new = *(int*)((char*)footer) + *(int*)((char*)footer + offset1) + 2 * offset1;
-																							// Hodnota novej velkosti hlavicky a paticky
-		*(int*)((char*)header) = new;														// Nastavenie hodnoty pre hlavicku
-		footer = ((char*)valid_ptr + *(unsigned int*)((char*)header));						// Posun na novu paticku
-		*(int*)((char*)footer) = new;														// Nastavenie hodnoty novej paticke
-	}
-
-	if (*(int*)((char*)header - offset1) > 0 && *(int*)((char*)header - offset1) != arraysize)				
-		// Zlucovanie sprava dolava; vlavo je urcite iba jeden volny blok
-		// Kontrolujem hranice pola tak, ze overim, ci hodnota zapisana pred hlavickou nie je absolutna velkost pola
-	{
-		int new = *(int*)((char*)header) + *(int*)((char*)header - offset1) + 2 * offset1;
-																							// Hodnota novej velkosti hlavicky a paticky
-		*(int*)((char*)footer) = new;														// Nastavenie hodnoty pre paticku
-		header = ((char*)valid_ptr - *(int*)((char*)header - offset1) - 3 * offset1);		// Posun na novu hlavicku
-		*(int*)((char*)header) = new;														// Nastavenie hodnoty novej hlavicke
-	}
-	return 0;
-}
-
 int memory_check(void* ptr) {
 	// Vracia 0 ak je ukazovatel neplatny, 1 ak je platny
 
 	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int), arraysize = *(unsigned int*)(start + offset0), checksize = offset0 + offset1;
-																							// Nastavenie hodnot premenyych rovnako ako v predoslych funkciach
+	// Nastavenie hodnot premenyych rovnako ako v predoslych funkciach
 	int boolean = 0;																		// Premenna oznacujuca zhodu smernikov
 
-	if ((char*)ptr == (char*)start || (unsigned int*)ptr == ((char*)start+offset0))			// Ak je smernik smernikom na zaciatok pola alebo na hodnotu jeho velkosti, je neplatny
+	if (ptr == NULL || (char*)ptr == (char*)start || (char*)ptr == ((char*)start + offset0))
+																							// Ak je NULL, smernik smernikom na zaciatok pola alebo na hodnotu jeho velkosti, je neplatny
 		return 0;
 
-	int* header = (unsigned int*)((char*)ptr - offset1);									// Hlavicka nachadzajuca sa pred smernikom
+	int* header = (int*)((char*)ptr - offset1);												// Hlavicka nachadzajuca sa pred smernikom
 
 	if (*header > 0)																		// Ak je kladna, nebola alokovana, pretoze alokovane bloky maju zapornu hlavicku
 		return 0;
 
 	while (checksize < arraysize)															// Kym nie som na konci pola
 	{
-		int *testheader = (unsigned int*)((char*)start + checksize);						// Hlavicka v poli
+		int* testheader = (int*)((char*)start + checksize);									// Hlavicka v poli
 		if (header == testheader)															// Ak sa smerniky rovnaju, vyskocim z pola a nastavim boolean na jedna
 		{
 			boolean = 1;
@@ -134,13 +99,52 @@ int memory_check(void* ptr) {
 	if (boolean == 0)																		// Ak sa smernik na hlavicku nenasiel, vraciam 0
 		return 0;
 
-	int *footer = (unsigned int*)((char*)ptr + abs(*header));								// Smernik na predpokladanu paticku
+	int* footer = (int*)((char*)ptr + abs(*header));										// Smernik na predpokladanu paticku
 
 	if (*header == *footer)																	// Hodnota hlavicky a paticky sa musia rovnat
 		return 1;																			// Ak sa rovnaju, vraciam 1
-	
+
 	return 0;																				// Inak vraciam 0
 }
+
+int memory_free(void* valid_ptr) {															// vracia 0 ak sa podarilo uvolnit pamat, inak vracia 1
+
+	if (valid_ptr == NULL || memory_check(valid_ptr) == 0)									// Kontrola platnosti pointera										
+		return 1;
+
+	unsigned int offset0 = sizeof(char), offset1 = sizeof(unsigned int), arraysize = *(unsigned int*)((char*)start + offset0);
+	char* header = ((char*)valid_ptr - offset1);											// Nastavenie sa na hlavicku daneho bloku
+	int temp = *(int*)((char*)header);
+	char* footer = ((char*)valid_ptr + abs(temp));											// Nastavenie sa na paticku daneho bloku
+
+	*(int*)((char*)header) = abs(*(int*)((char*)header));									// Oznacim hlavicku aj paticku kladnym cislom, co znamena, ze su volne
+	*(int*)((char*)footer) = abs(*(int*)((char*)footer));
+
+
+	if (*(int*)((char*)footer+offset1) > 0 && (int*)((char*)footer) != (int*)((char*)start + arraysize - offset1))					
+		// Zlucovanie zlava doprava; vpravo je urcite iba jeden volny blok
+		// Kontrolujem hranicu pola tak, ze porovnam, ci nie je footer patickou posledneho bloku vobec
+	{
+		int newsize = *(int*)((char*)footer) + *(int*)((char*)footer + offset1) + 2 * offset1;
+																							// Hodnota novej velkosti hlavicky a paticky
+		*(int*)((char*)header) = newsize;													// Nastavenie hodnoty pre hlavicku
+		footer = ((char*)valid_ptr + *(unsigned int*)((char*)header));						// Posun na novu paticku
+		*(int*)((char*)footer) = newsize;													// Nastavenie hodnoty novej paticke
+	}
+
+	if (*(int*)((char*)header - offset1) > 0 && *(int*)((char*)header - offset1) != arraysize)				
+		// Zlucovanie sprava dolava; vlavo je urcite iba jeden volny blok
+		// Kontrolujem hranice pola tak, ze overim, ci hodnota zapisana pred hlavickou nie je absolutna velkost pola
+	{
+		int newsize = *(int*)((char*)header) + *(int*)((char*)header - offset1) + 2 * offset1;
+																							// Hodnota novej velkosti hlavicky a paticky
+		*(int*)((char*)footer) = newsize;													// Nastavenie hodnoty pre paticku
+		header = ((char*)valid_ptr - *(int*)((char*)header - offset1) - 3 * offset1);		// Posun na novu hlavicku
+		*(int*)((char*)header) = newsize;													// Nastavenie hodnoty novej hlavicke
+	}
+	return 0;
+}
+
 
 void memory_init(void* ptr, unsigned int size) {
 	start = (char*)ptr;																		// Nastavim hodnotu globalnej premennej
@@ -180,7 +184,7 @@ void test4() {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
 		printf("%d\n", ziadana_velkost);
-		x = memory_alloc(ziadana_velkost);
+		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
 	printf("alokovane: %d\n", total);
@@ -206,7 +210,7 @@ void test5() {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
 		printf("%d\n", ziadana_velkost);
-		x = memory_alloc(ziadana_velkost);
+		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
 	printf("alokovane: %d\n", total);
@@ -232,7 +236,7 @@ void test6() {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
 		printf("%d\n", ziadana_velkost);
-		x = memory_alloc(ziadana_velkost);
+		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
 	printf("alokovane: %d\n", total);
@@ -257,7 +261,7 @@ void test7() {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
 		printf("%d\n", ziadana_velkost);
-		x = memory_alloc(ziadana_velkost);
+		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
 	printf("alokovane: %d\n", total);
@@ -306,17 +310,31 @@ void vypis(void* ptr) {
 	printf("Celkova velkost je %u\n", arraysize);
 
 	int check = offset0 + offset1, i = 1;
-	while (check + abs(*(unsigned int*)((char*)start + check)) + offset1 < arraysize) {
+	int temp = *(int*)((char*)start + check);
+	while (check + abs(temp) + offset1 < arraysize) {
 		printf("Hlavicka %d. bloku je %d\n", i, *(unsigned int*)((char*)start + check));
-		check += abs(*(unsigned int*)((char*)start + check)) + offset1;
+		temp = *(unsigned int*)((char*)start + check);
+		check += abs(temp) + offset1;
 		printf("Paticka %d. bloku je %d\n", i, *(unsigned int*)((char*)start + check));
 		check += offset1;
 		i++;
 		printf("Priebezne je vyuzitych %d bajtov\n", check);
 		if (check >= arraysize - 2 * offset1)
 			break;
+		temp = *(int*)((char*)start + check);
 	}
 	printf("Odpad je %d\n", arraysize - check);
+}
+
+void check_vypis(void* ptr) {
+	int mem = memory_check(ptr);
+	if (mem) {
+		printf("Som platny %d\n", mem);
+	}
+	else {
+		printf("Nie som platny %d\n", mem);
+	}
+		
 }
 
 int main() {
@@ -324,79 +342,88 @@ int main() {
 	char region[MAX];
 	memory_init(region, MAX);
 
-	vypis(start);
+//	vypis(start);
 
 	int a = 8;
-	char* pole0 = memory_alloc(a);
+	char* pole0 = (char*)memory_alloc(a);
 	if (pole0 != NULL)
 	{
-		for (int i = 0; i < a; i++)
-			pole0[i] = 1;
-
-		if (memory_check(pole0))
-			printf("Som platny\n");
-		else
-			printf("Nie som platny\n");
+		memset(pole0, 1, a);
 	}
 	else
 	{
 		printf("---------------------------Som NULL\n");
 	}
+	check_vypis(pole0);
 
-	vypis(start);
+//	vypis(start);
 
 	int b = 9;
-	char* pole1 = memory_alloc(b);
+	char* pole1 = (char*)memory_alloc(b);
 	if (pole1 != NULL)
 	{
-		for (int i = 0; i < b; i++)
-			pole1[i] = 2;
+		memset(pole1, 2, b);
 	}
 	else
 	{
 		printf("---------------------------Som NULL\n");
 	}
+	check_vypis(pole1);
+
 	vypis(start);
 
 	int c = 10;
-	char* pole2 = memory_alloc(c);
+	char* pole2 = (char*)memory_alloc(c);
 	if (pole2 != NULL)
 	{
-		for (int i = 0; i < c; i++)
-			pole2[i] = 3;
+		memset(pole2, 3, c);
 	}
 	else
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	vypis(start);
+	check_vypis(pole2);
+
+//	vypis(start);
 
 	int d = 11;
-	char* pole3 = memory_alloc(d);
+	char* pole3 = (char*)memory_alloc(d);
 	if (pole3 != NULL)
 	{
-		for (int i = 0; i < d; i++)
-			pole3[i] = 4;
+		memset(pole3, 4, d);
 	}
 	else
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	vypis(start);
+	check_vypis(pole3);
+
+//	vypis(start);
 
 	int e = 30;
-	char* pole4 = memory_alloc(e);
+	char* pole4 = (char*)memory_alloc(e);
 	if (pole4 != NULL)
 	{
-		for (int i = 0; i < e; i++)
-			pole4[i] = 5;
+		memset(pole4, 5, e);
 	}
 	else
 	{
 		printf("---------------------------Som NULL\n");
 	}
+	check_vypis(pole4);
 
-	vypis(start);
+//	vypis(start);
+
+	for (int i = 0; i < MAX; i++)
+	{
+		if (memory_check((start + i))) {
+			printf("Som platny %d\n", i);
+		}
+		else {
+			printf("Nie som platny %d\n", i);
+		}
+	}
+
 
 	if (memory_free(pole0))
 		printf("----------------------------Neuvolnil som pole0.\n");
@@ -409,7 +436,7 @@ int main() {
 	if (memory_free(pole2))
 		printf("----------------------------Neuvolnil som pole2.\n");
 
-	vypis(start);
+//	vypis(start);
 
 	test4();
 
