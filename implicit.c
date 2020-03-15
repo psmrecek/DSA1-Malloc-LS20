@@ -12,7 +12,7 @@
 #define t100k 100000
 #define t1m 1000000
 
-#define MAX 1000
+#define MAX 50
 #define velkost4 150
 #define velkost5 50000
 #define velkost6 100000
@@ -40,13 +40,18 @@ void* memory_alloc(unsigned int size) {
 																								// enough je boolean, ktory oznacuje, ci sa nachadza v poli aspon jeden blok dostatocnej velkosti na alokovanie
 																								// bestchecksize je hodnota najlepsieho najdeneho posunu od zaciatku pola
 		while (checksize < arraysize)
-			//	while (checksize + size < arraysize)
 		{
 			char header = *(unsigned char*)((char*)start + checksize);							// Hodnota aktualnej hlavicky
 
 			if (header > 0 && header >= size)
 			{
 				enough = 1;																		// Bolean oznacujuci existenciu aspon jedneho vyhovujuceho bloku
+				if (header == size)																// Ak sa nasla presne zhodna hlavicka, cysklus konci
+				{
+					bestheader = header;														// Oznacenie najlepsej hlavicky
+					bestchecksize = checksize;													// Oznacenie najlepsieho offsetu voci zaciatku pola
+					break;
+				}
 				if (header - size < diff)														// Ak je rozdiel headera a velkosti mensi ako predosly rozdiel
 				{
 					bestheader = header;														// Priebezne najlepsia hodnota hlavicky
@@ -54,7 +59,7 @@ void* memory_alloc(unsigned int size) {
 					bestchecksize = checksize;													// Priebezne najlepsi offset voci zaciatku pola
 				}
 			}
-			checksize += abs(header) + 2 * offset1;													// Posun na dalsiu hlavicku
+			checksize += abs(header) + 2 * offset1;												// Posun na dalsiu hlavicku
 		}
 
 		if (enough)
@@ -65,10 +70,10 @@ void* memory_alloc(unsigned int size) {
 				size = bestheader;
 				b = 0;
 			}
-			*(unsigned char*)((char*)start + bestchecksize) = -1 * size;							// Hlavicka bloku zmenena
+			*(unsigned char*)((char*)start + bestchecksize) = -1 * size;						// Hlavicka bloku zmenena
 			*(unsigned char*)((char*)start + bestchecksize + size + offset1) = -1 * size;		// Paticka bloku zmenena
 
-			if (b && arraysize - bestchecksize - 2 * offset1 - size >= 2 * offset1)				// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
+			if (b && arraysize - bestchecksize - 2 * offset1 - size >= 8)				
 			{
 				*(unsigned char*)((char*)start + bestchecksize + size + 2 * offset1) = bestheader - size - 2 * offset1;
 				// Nasledujuca hlavicka
@@ -93,13 +98,18 @@ void* memory_alloc(unsigned int size) {
 																								// enough je boolean, ktory oznacuje, ci sa nachadza v poli aspon jeden blok dostatocnej velkosti na alokovanie
 																								// bestchecksize je hodnota najlepsieho najdeneho posunu od zaciatku pola
 		while (checksize < arraysize)
-			//	while (checksize + size < arraysize)
 		{
 			short header = *(unsigned short*)((char*)start + checksize);							// Hodnota aktualnej hlavicky
 
 			if (header > 0 && header >= size)
 			{
 				enough = 1;																		// Bolean oznacujuci existenciu aspon jedneho vyhovujuceho bloku
+				if (header == size)																// Ak sa nasla presne zhodna hlavicka, cysklus konci
+				{
+					bestheader = header;														// Oznacenie najlepsej hlavicky
+					bestchecksize = checksize;													// Oznacenie najlepsieho offsetu voci zaciatku pola
+					break;
+				}
 				if (header - size < diff)														// Ak je rozdiel headera a velkosti mensi ako predosly rozdiel
 				{
 					bestheader = header;														// Priebezne najlepsia hodnota hlavicky
@@ -121,7 +131,7 @@ void* memory_alloc(unsigned int size) {
 			*(unsigned short*)((char*)start + bestchecksize) = -1 * size;							// Hlavicka bloku zmenena
 			*(unsigned short*)((char*)start + bestchecksize + size + offset1) = -1 * size;		// Paticka bloku zmenena
 
-			if (b && arraysize - bestchecksize - 2 * offset1 - size >= 2 * offset1)				// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
+			if (b && arraysize - bestchecksize - 2 * offset1 - size >= 8)				
 			{
 				*(unsigned short*)((char*)start + bestchecksize + size + 2 * offset1) = bestheader - size - 2 * offset1;
 				// Nasledujuca hlavicka
@@ -146,13 +156,18 @@ void* memory_alloc(unsigned int size) {
 																								// enough je boolean, ktory oznacuje, ci sa nachadza v poli aspon jeden blok dostatocnej velkosti na alokovanie
 																								// bestchecksize je hodnota najlepsieho najdeneho posunu od zaciatku pola
 		while (checksize < arraysize)
-			//	while (checksize + size < arraysize)
 		{
 			int header = *(unsigned int*)((char*)start + checksize);							// Hodnota aktualnej hlavicky
 
 			if (header > 0 && header >= size)
 			{
 				enough = 1;																		// Bolean oznacujuci existenciu aspon jedneho vyhovujuceho bloku
+				if (header == size)																// Ak sa nasla presne zhodna hlavicka, cysklus konci
+				{
+					bestheader = header;														// Oznacenie najlepsej hlavicky
+					bestchecksize = checksize;													// Oznacenie najlepsieho offsetu voci zaciatku pola
+					break;
+				}
 				if (header - size < diff)														// Ak je rozdiel headera a velkosti mensi ako predosly rozdiel
 				{
 					bestheader = header;														// Priebezne najlepsia hodnota hlavicky
@@ -174,7 +189,7 @@ void* memory_alloc(unsigned int size) {
 			*(unsigned int*)((char*)start + bestchecksize) = -1 * size;							// Hlavicka bloku zmenena
 			*(unsigned int*)((char*)start + bestchecksize + size + offset1) = -1 * size;		// Paticka bloku zmenena
 
-			if (b && arraysize - bestchecksize - 2 * offset1 - size >= 2 * offset1)				// Ak zostava volny blok aspon o velkosti 1; sposobuje chybu stacku ak tu nie je
+			if (b && arraysize - bestchecksize - 2 * offset1 - size >= 8)				
 			{
 				*(unsigned int*)((char*)start + bestchecksize + size + 2 * offset1) = bestheader - size - 2 * offset1;
 				// Nasledujuca hlavicka
@@ -427,7 +442,7 @@ void memory_init(void* ptr, unsigned int size) {
 	start = (char*)ptr;																			// Nastavim hodnotu globalnej premennej
 	memset(start, 0, size);																		// Nastavim hodnotu celeho pola na 0
 
-//	memset(start + size, 255, size);
+	memset(start + size, 255, size);
 
 	if (size < 127)
 	{
@@ -619,7 +634,7 @@ void vypis() {
 				break;
 			temp = *(char*)((char*)start + check);
 		}
-		printf("Odpad je %d\n", arraysize - check);
+		printf("Zvysok na konci pola je %d\n", arraysize - check);
 	}
 
 	if (flag == 1)
@@ -704,8 +719,6 @@ float test_1() {
 		i++;
 	} while (x != NULL);
 
-	//vypis();
-
 	int real = (i - 1) * size;
 	float ratio = 100 * (float)real / test;
 
@@ -734,8 +747,6 @@ float test_2() {
 		x = (char*)memory_alloc(size);
 		total += size;
 	} while (x != NULL);
-
-	// vypis();
 
 	total -= size;
 
@@ -767,8 +778,6 @@ float test_3() {
 		total += size;
 	} while (x != NULL);
 
-	//vypis();
-
 	total -= size;
 
 	float ratio = 100 * (float)total / test;
@@ -799,8 +808,6 @@ float test_4() {
 		total += size;
 	} while (x != NULL);
 
-	//vypis();
-
 	total -= size;
 
 	float ratio = 100 * (float)total / test;
@@ -814,48 +821,48 @@ float test_4() {
 
 int main() {
 
-	float average1 = 0;
-	int count = 1000;
-	srand(time(0));
+	//float average1 = 0;
+	//int count = 1000;
+	//srand(time(0));
 
-	for (int i = 0; i < count; i++)
-	{
-		average1 += test_1();
-	}
-	average1 /= count;
-	printf("Priemerna uspesnost pre bloky rovnakych malych velkosti je: %2.2f%%\n", average1);
+	//for (int i = 0; i < count; i++)
+	//{
+	//	average1 += test_1();
+	//}
+	//average1 /= count;
+	//printf("Priemerna uspesnost pre bloky rovnakych malych velkosti je: %2.2f%%\n", average1);
 
-	float average2 = 0;
-	for (int i = 0; i < count; i++)
-	{
-		average2 += test_2();
-	}
-	average2 /= count;
-	printf("Priemerna uspesnost pre bloky NErovnakych malych velkosti je: %2.2f%%\n", average2);
+	//float average2 = 0;
+	//for (int i = 0; i < count; i++)
+	//{
+	//	average2 += test_2();
+	//}
+	//average2 /= count;
+	//printf("Priemerna uspesnost pre bloky NErovnakych malych velkosti je: %2.2f%%\n", average2);
 
-	float average3 = 0;
-	for (int i = 0; i < count; i++)
-	{
-		average3 += test_3();
-	}
-	average3 /= count;
-	printf("Priemerna uspesnost pre bloky NErovnakych velkych velkosti je: %2.2f%%\n", average3);
+	//float average3 = 0;
+	//for (int i = 0; i < count; i++)
+	//{
+	//	average3 += test_3();
+	//}
+	//average3 /= count;
+	//printf("Priemerna uspesnost pre bloky NErovnakych velkych velkosti je: %2.2f%%\n", average3);
 
-	float average4 = 0;
-	for (int i = 0; i < count; i++)
-	{
-		average4 += test_4();
-	}
-	average4 /= count;
-	printf("Priemerna uspesnost pre bloky NErovnakych zmiesanych velkosti je: %2.2f%%\n", average4);
+	//float average4 = 0;
+	//for (int i = 0; i < count; i++)
+	//{
+	//	average4 += test_4();
+	//}
+	//average4 /= count;
+	//printf("Priemerna uspesnost pre bloky NErovnakych zmiesanych velkosti je: %2.2f%%\n", average4);
 
-	float globalaverage = (average1 + average2 + average3 + average4) / 4;
-	printf("Celkova riemerna uspesnost je: %2.2f%%\n", globalaverage);
+	//float globalaverage = (average1 + average2 + average3 + average4) / 4;
+	//printf("Celkova riemerna uspesnost je: %2.2f%%\n", globalaverage);
 
 	char region[MAX];
 	memory_init(region, MAX);
 
-//	vypis(start);
+	vypis(start);
 
 	int a = 8;
 	char* pole0 = (char*)memory_alloc(a);
@@ -884,8 +891,10 @@ int main() {
 //	check_vypis(pole1);
 
 //	vypis(start);
+	if (memory_free(pole0))
+		printf("----------------------------Neuvolnil som pole0.\n");
 
-	int c = 10;
+	int c = 8;
 	char* pole2 = (char*)memory_alloc(c);
 	if (pole2 != NULL)
 	{
@@ -925,19 +934,19 @@ int main() {
 	}
 //	check_vypis(pole4);
 
-//	vypis(start);
+	vypis(start);
 
-	//for (int i = 0; i < MAX; i++)
+	//for (int i = 0; i < MAX*2; i++)
 	//{
 	//	if (memory_check((start + i))) {
-	//		printf("Som platny %d\n", i);
+	//		printf("%d Som platny %d\n",i, *(char*)((char*)start + i));
 	//	}
 	//	else {
-	//		printf("Nie som platny %d\n", i);
+	//		printf("%d Nie som platny %d\n",i, *(char*)((char*)start + i));
 	//	}
 	//}
-
-
+//
+//
 	if (memory_free(pole0))
 		printf("----------------------------Neuvolnil som pole0.\n");
 	if (memory_free(pole4))
@@ -948,16 +957,16 @@ int main() {
 		printf("----------------------------Neuvolnil som pole3.\n");
 	if (memory_free(pole2))
 		printf("----------------------------Neuvolnil som pole2.\n");
-
-//	vypis(start);
-
-	test4();
-
-	test5();
-
-	test6();
-
-	test7();
+//
+////	vypis(start);
+//
+//	test4();
+//
+//	test5();
+//
+//	test6();
+//
+//	test7();
 
 	//rer_main();
 	return 0;
