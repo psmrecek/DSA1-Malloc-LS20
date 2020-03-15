@@ -3,8 +3,16 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define MAX 40000
-#define test0 112
+
+#define t50 50
+#define t100 100
+#define t200 200
+#define t1k 1000
+#define t10k 10000
+#define t100k 100000
+#define t1m 1000000
+
+#define MAX 1000
 #define velkost4 150
 #define velkost5 50000
 #define velkost6 100000
@@ -297,7 +305,7 @@ int memory_check(void* ptr) {
 
 		return 0;																				// Inak vraciam 0
 	}
-
+	return 0;
 }
 
 int memory_free(void* valid_ptr) {															// vracia 0 ak sa podarilo uvolnit pamat, inak vracia 1
@@ -411,13 +419,13 @@ int memory_free(void* valid_ptr) {															// vracia 0 ak sa podarilo uvol
 		}
 		return 0;
 	}
-
+	return 1;
 }
 
 
 void memory_init(void* ptr, unsigned int size) {
-	start = (char*)ptr;																		// Nastavim hodnotu globalnej premennej
-	memset(start, 0, size);																	// Nastavim hodnotu celeho pola na 0
+	start = (char*)ptr;																			// Nastavim hodnotu globalnej premennej
+	memset(start, 0, size);																		// Nastavim hodnotu celeho pola na 0
 
 //	memset(start + size, 255, size);
 
@@ -431,7 +439,7 @@ void memory_init(void* ptr, unsigned int size) {
 		*(unsigned char*)((char*)start + size - offset1) = (size - offset0 - 3 * offset1);		// Paticka jedineho volneho bloku
 	}
 	else if (size < 32767) {
-		unsigned short offset0 = sizeof(char), offset1 = sizeof(unsigned short);					// Nastavenie offsetov podla aktualne pouzivanych premennych
+		unsigned short offset0 = sizeof(char), offset1 = sizeof(unsigned short);				// Nastavenie offsetov podla aktualne pouzivanych premennych
 
 		*(char*)start = 1;																		// Flag oznacujuci, ake premenne pouzivam
 		*(unsigned short*)((char*)start + offset0) = size;										// Celkova velkost
@@ -449,12 +457,8 @@ void memory_init(void* ptr, unsigned int size) {
 	}
 }
 
-void test_integrity() {
-	char region[test0];
-	memory_init(region, test0);
 
 
-}
 
 void test4() {
 	char region[velkost4];
@@ -471,7 +475,7 @@ void test4() {
 	do {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
-		printf("%d\n", ziadana_velkost);
+		//printf("%d\n", ziadana_velkost);
 		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
@@ -497,7 +501,7 @@ void test5() {
 	do {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
-		printf("%d\n", ziadana_velkost);
+		//printf("%d\n", ziadana_velkost);
 		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
@@ -523,7 +527,7 @@ void test6() {
 	do {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
-		printf("%d\n", ziadana_velkost);
+		//printf("%d\n", ziadana_velkost);
 		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
@@ -548,7 +552,7 @@ void test7() {
 	do {
 		ziadana_velkost = (rand() % (horna_hranica - dolna_hranica)) + dolna_hranica;
 		total += ziadana_velkost;
-		printf("%d\n", ziadana_velkost);
+		//printf("%d\n", ziadana_velkost);
 		x = (char*)memory_alloc(ziadana_velkost);
 	} while (x != NULL);
 	total -= ziadana_velkost;
@@ -590,7 +594,7 @@ void rer_main() {
 	}
 }
 
-void vypis(void* ptr) {
+void vypis() {
 	printf("+++++++++++++++Zaciatok funkcie vypis+++++++++++++++\n");
 	char flag = *(char*)start;
 
@@ -680,12 +684,178 @@ void check_vypis(void* ptr) {
 		
 }
 
+float test_1() {
+	//Test 1: Bloky rovnekj velkosti 8 az 24
+
+	char region[t50];
+	int test = t50;
+
+	memory_init(region, test);
+
+	int min = 8, max = 24, i = 0;
+
+	int size = (rand() % (max - min + 1)) + min;
+
+	char* x;
+
+	do
+	{
+		x = (char*)memory_alloc(size);
+		i++;
+	} while (x != NULL);
+
+	//vypis();
+
+	int real = (i - 1) * size;
+	float ratio = 100 * (float)real / test;
+
+	//printf("Celkova velkost: %d\n", test);
+	//printf("Velkost bloku: %d\n", size);
+	//printf("Alokovane: %d\n", real);
+	//printf("Uspesnost: %2.2f%%\n", ratio);
+
+	return ratio;
+}
+
+float test_2() {
+	//Test 2: Bloky NErovnakej velkosti 8 az 24
+
+	char region[t50];
+	int test = t50;
+
+	memory_init(region, test);
+
+	int min = 8, max = 24, i = 0, total = 0, size;
+	char* x;
+
+	do
+	{
+		size = (rand() % (max - min + 1)) + min;
+		x = (char*)memory_alloc(size);
+		total += size;
+	} while (x != NULL);
+
+	// vypis();
+
+	total -= size;
+
+	float ratio = 100 * (float)total / test;
+
+	//printf("Celkova velkost: %d\n", test);
+	//printf("Alokovane: %d\n", total);
+	//printf("Uspesnost: %2.2f%%\n", ratio);
+
+	return ratio;
+}
+
+float test_3() {
+	//Test 3: Bloky NErovnakej velkosti 500 az 5000
+
+	char region[t10k];
+	int test = t10k;
+
+	memory_init(region, test);
+
+	int min = 500, max = 5000, i = 0, total = 0, size;
+	char* x;
+
+	do
+	{
+		size = (rand() % (max - min + 1)) + min;
+		//printf("Pokusam sa alokovat: %d\n", size);
+		x = (char*)memory_alloc(size);
+		total += size;
+	} while (x != NULL);
+
+	//vypis();
+
+	total -= size;
+
+	float ratio = 100 * (float)total / test;
+
+	//printf("Celkova velkost: %d\n", test);
+	//printf("Alokovane: %d\n", total);
+	//printf("Uspesnost: %2.2f%%\n", ratio);
+
+	return ratio;
+}
+
+float test_4() {
+	//Test 4: Bloky NErovnakej velkosti 8 az 50000
+
+	char region[t1m];
+	int test = t1m;
+
+	memory_init(region, test);
+
+	int min = 8, max = 50000, i = 0, total = 0, size;
+	char* x;
+
+	do
+	{
+		size = (rand() % (max - min + 1)) + min;
+		//printf("Pokusam sa alokovat: %d\n", size);
+		x = (char*)memory_alloc(size);
+		total += size;
+	} while (x != NULL);
+
+	//vypis();
+
+	total -= size;
+
+	float ratio = 100 * (float)total / test;
+
+	//printf("Celkova velkost: %d\n", test);
+	//printf("Alokovane: %d\n", total);
+	//printf("Uspesnost: %2.2f%%\n", ratio);
+
+	return ratio;
+}
+
 int main() {
+
+	float average1 = 0;
+	int count = 1000;
+	srand(time(0));
+
+	for (int i = 0; i < count; i++)
+	{
+		average1 += test_1();
+	}
+	average1 /= count;
+	printf("Priemerna uspesnost pre bloky rovnakych malych velkosti je: %2.2f%%\n", average1);
+
+	float average2 = 0;
+	for (int i = 0; i < count; i++)
+	{
+		average2 += test_2();
+	}
+	average2 /= count;
+	printf("Priemerna uspesnost pre bloky NErovnakych malych velkosti je: %2.2f%%\n", average2);
+
+	float average3 = 0;
+	for (int i = 0; i < count; i++)
+	{
+		average3 += test_3();
+	}
+	average3 /= count;
+	printf("Priemerna uspesnost pre bloky NErovnakych velkych velkosti je: %2.2f%%\n", average3);
+
+	float average4 = 0;
+	for (int i = 0; i < count; i++)
+	{
+		average4 += test_4();
+	}
+	average4 /= count;
+	printf("Priemerna uspesnost pre bloky NErovnakych zmiesanych velkosti je: %2.2f%%\n", average4);
+
+	float globalaverage = (average1 + average2 + average3 + average4) / 4;
+	printf("Celkova riemerna uspesnost je: %2.2f%%\n", globalaverage);
 
 	char region[MAX];
 	memory_init(region, MAX);
 
-	vypis(start);
+//	vypis(start);
 
 	int a = 8;
 	char* pole0 = (char*)memory_alloc(a);
@@ -697,7 +867,7 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	check_vypis(pole0);
+//	check_vypis(pole0);
 
 //	vypis(start);
 
@@ -711,7 +881,7 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	check_vypis(pole1);
+//	check_vypis(pole1);
 
 //	vypis(start);
 
@@ -725,7 +895,7 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	check_vypis(pole2);
+//	check_vypis(pole2);
 
 //	vypis(start);
 
@@ -739,7 +909,7 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	check_vypis(pole3);
+//	check_vypis(pole3);
 
 //	vypis(start);
 
@@ -753,7 +923,7 @@ int main() {
 	{
 		printf("---------------------------Som NULL\n");
 	}
-	check_vypis(pole4);
+//	check_vypis(pole4);
 
 //	vypis(start);
 
@@ -781,13 +951,13 @@ int main() {
 
 //	vypis(start);
 
-	//test4();
+	test4();
 
-	//test5();
+	test5();
 
-	//test6();
+	test6();
 
-	//test7();
+	test7();
 
 	//rer_main();
 	return 0;
