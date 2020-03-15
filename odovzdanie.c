@@ -18,6 +18,10 @@
 #define velkost6 100000
 #define velkost7 100000
 
+// Vypracoval: Peter Smrecek
+// Zadanie cislo 1
+// Letny semester 2020
+
 char* start;																				// Globalny pointer na zaciatok pola
 
 void* memory_alloc(unsigned int size) {
@@ -438,8 +442,6 @@ int memory_free(void* valid_ptr) {															// vracia 0 ak sa podarilo uvol
 void memory_init(void* ptr, unsigned int size) {
 	start = (char*)ptr;																			// Nastavim hodnotu globalnej premennej
 	memset(start, 0, size);																		// Nastavim hodnotu celeho pola na 0
-
-	//memset(start + size, 255, size);
 
 	if (size < 127)
 	{
